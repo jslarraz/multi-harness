@@ -6,7 +6,9 @@ from typing import Annotated, Optional
 import typer
 
 from .agents import AGENT_REGISTRY
+from .config import ConfigError, read_agent_names
 from .harness import HarnessError, init as harness_init
+from .status import check_all
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -88,6 +90,46 @@ def init(
     for link, result in report.symlinks:
         typer.echo(f"  link    {link.relative_to(path)} ({result})")
     typer.echo("Done.")
+
+
+@app.command()
+def status(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            help="Project directory to check. Defaults to the current dir.",
+            file_okay=False,
+            dir_okay=True,
+            exists=True,
+            resolve_path=True,
+        ),
+    ] = Path("."),
+) -> None:
+    """Show symlink health for all registered agents."""
+    try:
+        agent_names = read_agent_names(path)
+    except ConfigError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    statuses = check_all(path, agent_names)
+
+    _STATUS_COLOR = {
+        "ok": typer.colors.GREEN,
+        "missing": typer.colors.YELLOW,
+        "broken": typer.colors.RED,
+        "detached": typer.colors.RED,
+    }
+    max_label = max(len(r.label) for s in statuses for r in s.rows)
+    for agent_status in statuses:
+        typer.echo(agent_status.spec.display_name)
+        for row in agent_status.rows:
+            typer.echo(f"  {row.label.ljust(max_label + 2)}", nl=False)
+            typer.secho(row.status, fg=_STATUS_COLOR[row.status])
+        typer.echo("")
+
+    if not all(s.is_ok() for s in statuses):
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":

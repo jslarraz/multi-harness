@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .agents import AGENT_REGISTRY, AgentSpec
+from .config import write_config
 from .symlinks import SymlinkResult, ensure_symlink
 
 HARNESS_DIR = Path(".harness")
@@ -132,4 +133,5 @@ def init(
                 raise HarnessError(str(exc)) from exc
             report.symlinks.append((link, result))
 
+    write_config(root, agent_names)
     return report
