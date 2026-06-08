@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "multi-harness"
+version = "0.1.0"
+description = "Manage projects that target multiple coding agents from a single shared harness."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "jslarraz" }]
+dependencies = [
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+]
+
+[project.scripts]
+mh = "multi_harness.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/multi_harness"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
