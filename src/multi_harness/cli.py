@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -7,7 +8,7 @@ import typer
 
 from .agents import AGENT_REGISTRY
 from .config import ConfigError, read_agent_names
-from .harness import HarnessError, init as harness_init
+from .harness import HarnessError, add as harness_add, init as harness_init, remove as harness_remove
 from .status import check_all
 
 app = typer.Typer(
@@ -89,6 +90,73 @@ def init(
         typer.echo(f"  created {created.relative_to(path)}")
     for link, result in report.symlinks:
         typer.echo(f"  link    {link.relative_to(path)} ({result})")
+    typer.echo("Done.")
+
+
+@app.command()
+def add(
+    agents: Annotated[
+        list[str],
+        typer.Argument(help="Agent name(s) to register."),
+    ],
+    path: Annotated[
+        Path,
+        typer.Option(
+            "--path",
+            help="Project directory. Defaults to the current dir.",
+            file_okay=False,
+            dir_okay=True,
+            exists=True,
+            resolve_path=True,
+        ),
+    ] = Path("."),
+) -> None:
+    """Register one or more new agents to an existing harness."""
+    try:
+        report = harness_add(path, agents)
+    except HarnessError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    for link, result in report.symlinks:
+        typer.echo(f"  link    {link.relative_to(path)} ({result})")
+    typer.echo("Done.")
+
+
+@app.command()
+def remove(
+    agents: Annotated[
+        list[str],
+        typer.Argument(help="Agent name(s) to remove."),
+    ],
+    path: Annotated[
+        Path,
+        typer.Option(
+            "--path",
+            help="Project directory. Defaults to the current dir.",
+            file_okay=False,
+            dir_okay=True,
+            exists=True,
+            resolve_path=True,
+        ),
+    ] = Path("."),
+) -> None:
+    """Remove one or more agents from the harness."""
+    try:
+        report = harness_remove(path, agents)
+    except HarnessError as exc:
+        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    for link in report.removed_symlinks:
+        typer.echo(f"  unlinked {link.relative_to(path)}")
+    for d in report.removed_dirs:
+        typer.echo(f"  removed  {d.relative_to(path)}")
+    for d in report.nonempty_dirs:
+        rel = d.relative_to(path)
+        if typer.confirm(f"  {rel} is not empty. Remove it?", default=False):
+            shutil.rmtree(d)
+            typer.echo(f"  removed  {rel}")
     typer.echo("Done.")
 
 
