@@ -9,7 +9,7 @@ description = "Manage projects that target multiple coding agents from a single 
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "jslarraz" }]
+authors = [{ name = "jslarraz", email = "jslarraz@gmail.com" }]
 dependencies = [
     "typer>=0.12",
 ]
