@@ -38,12 +38,12 @@ class RemoveReport:
 
 
 def detect_configured_agents(root: Path) -> list[AgentSpec]:
-    """Return registered agents whose detection paths exist (or are symlinks) under ``root``."""
+    """Return registered agents whose real detection paths exist under ``root``."""
     detected: list[AgentSpec] = []
     for spec in AGENT_REGISTRY.values():
         for p in spec.detection_paths:
             candidate = root / p
-            if candidate.exists() or candidate.is_symlink():
+            if candidate.exists() and not candidate.is_symlink():
                 detected.append(spec)
                 break
     return detected

@@ -15,6 +15,7 @@ from multi_harness.harness import (
     HARNESS_DIR,
     HARNESS_SKILLS,
     HarnessError,
+    detect_configured_agents,
     init as harness_init,
 )
 
@@ -115,6 +116,16 @@ def test_multi_agent_detected_errors(project: Path, helpers) -> None:
     # Nothing should have been modified on the filesystem.
     assert not (project / HARNESS_DIR).exists()
     assert (project / "CLAUDE.md").read_text() == "claude"
+
+
+def test_detection_ignores_symlink_markers(project: Path) -> None:
+    (project / AGENTS_MD).touch()
+    (project / "CLAUDE.md").symlink_to("AGENTS.md")
+    (project / ".subagents").symlink_to(".harness/agents")
+
+    detected = detect_configured_agents(project)
+
+    assert detected == []
 
 
 def test_harness_exists_without_force_errors(project: Path) -> None:

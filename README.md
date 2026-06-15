@@ -138,8 +138,9 @@ my-project/
 │   ├── copilot-instructions.md       → ../AGENTS.md
 │   ├── skills                        → ../.harness/skills
 │   └── agents                        → ../.harness/agents
-└── .agents/
-    └── skills                        → ../.harness/skills
+├── .agents/
+│   └── skills                        → ../.harness/skills
+└── .subagents                        → .harness/agents
 ```
 
 All symlinks are **relative**, so the tree is fully portable across machines and paths.

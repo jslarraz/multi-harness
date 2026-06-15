@@ -181,6 +181,9 @@ def status(
         raise typer.Exit(code=1)
 
     statuses = check_all(path, agent_names)
+    if not statuses:
+        typer.echo("No agents registered.")
+        return
 
     _STATUS_COLOR = {
         "ok": typer.colors.GREEN,

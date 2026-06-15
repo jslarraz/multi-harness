@@ -221,6 +221,17 @@ def test_cli_status_subset_agents(project: Path) -> None:
     assert "OpenAI Codex" not in result.output
 
 
+def test_cli_status_no_registered_agents(project: Path) -> None:
+    runner = CliRunner()
+    runner.invoke(app, ["init", str(project), "--agents", "claude"])
+    runner.invoke(app, ["remove", "claude", "--path", str(project)])
+
+    result = runner.invoke(app, ["status", str(project)])
+
+    assert result.exit_code == 0
+    assert "No agents registered." in result.output
+
+
 def test_cli_status_detached_shows_in_output(project: Path) -> None:
     runner = CliRunner()
     runner.invoke(app, ["init", str(project), "--agents", "claude"])
